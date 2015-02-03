@@ -1,4 +1,8 @@
-﻿using System.Web.Http;
+﻿using System;
+using System.Web.Http;
+using Microsoft.Owin;
+using Microsoft.Owin.Security.OAuth;
+using MinimalOwinWebApiSelfHost.OAuthServerProvider;
 using Owin;
 
 namespace MinimalOwinWebApiSelfHost
@@ -7,8 +11,23 @@ namespace MinimalOwinWebApiSelfHost
     {
         public void Configuration(IAppBuilder app)
         {
+            ConfigureAuth(app);
             var webApiConfiguration = ConfigureWebApi();
             app.UseWebApi(webApiConfiguration);
+        }
+
+        private void ConfigureAuth(IAppBuilder app)
+        {
+            var oAuthOptions = new OAuthAuthorizationServerOptions
+            {
+                TokenEndpointPath = new PathString("/Token"),
+                Provider = new ApplicationOAuthServerProvider(),
+                AccessTokenExpireTimeSpan = TimeSpan.FromDays(14),
+                AllowInsecureHttp = true
+            };
+            app.UseOAuthAuthorizationServer(oAuthOptions);
+            app.UseOAuthBearerAuthentication(
+                new OAuthBearerAuthenticationOptions());
         }
 
         private HttpConfiguration ConfigureWebApi()
