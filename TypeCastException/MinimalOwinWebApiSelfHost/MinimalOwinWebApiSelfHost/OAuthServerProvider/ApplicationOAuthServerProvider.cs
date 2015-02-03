@@ -11,7 +11,7 @@ namespace MinimalOwinWebApiSelfHost.OAuthServerProvider
         {
             // This call is required...
             // but we're not using client authentication, so validate and move on...
-            await base.ValidateClientAuthentication(context);
+            await Task.FromResult(context.Validated());
         }
 
         public override async Task GrantResourceOwnerCredentials(OAuthGrantResourceOwnerCredentialsContext context)
