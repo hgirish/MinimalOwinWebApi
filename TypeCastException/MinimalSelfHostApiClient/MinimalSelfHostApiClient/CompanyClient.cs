@@ -3,78 +3,90 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace MinimalSelfHostApiClient
 {
     public class CompanyClient
     {
-        private string _hostUri;
-
-        public CompanyClient(string hostUri)
+        private readonly Uri _baseRequestUri;
+        private string _accessToken;
+        public CompanyClient(Uri baseRequestUri, string accessToken)
         {
-            _hostUri = hostUri;
+            _baseRequestUri = new Uri(baseRequestUri,"api/companies/");
+            _accessToken = accessToken;
         }
 
-        public HttpClient CreateClient()
+        void SetClientAuthentication(HttpClient client)
         {
-            var client = new HttpClient();
-            client.BaseAddress = new Uri(new Uri(_hostUri),"api/companies/");
-
-            return client;
+            client.DefaultRequestHeaders.Authorization
+                = new AuthenticationHeaderValue("Bearer", _accessToken);
         }
+       
 
-        public IEnumerable<Company> GetCompanies()
+        public async Task<IEnumerable<Company>> GetCompaniesAsync()
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response =  client.GetAsync(client.BaseAddress).Result;
+                SetClientAuthentication(client);
+                response = await   client.GetAsync(_baseRequestUri);
             }
-            var result = response.Content.ReadAsAsync<IEnumerable<Company>>().Result;
+            Console.WriteLine(response.IsSuccessStatusCode);
+            Console.WriteLine(response.ReasonPhrase);
+            var result = await response.Content.ReadAsAsync<IEnumerable<Company>>();
             return result;
         }
 
-        public Company GetCompany(int id)
+        public async Task<Company> GetCompanyAsync(int id)
         {
+            Console.WriteLine("GetCompanyAsync id: {0}", id);
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.GetAsync(
-                    new Uri(client.BaseAddress,id.ToString(CultureInfo.InvariantCulture)))
-                    .Result;
+                SetClientAuthentication(client);
+                response = await  client.GetAsync(
+                    new Uri(_baseRequestUri,id.ToString(
+                        CultureInfo.InvariantCulture)));
             }
-            var result = response.Content.ReadAsAsync<Company>().Result;
+            var result = await response.Content.ReadAsAsync<Company>();
             return result;
         }
 
-        public HttpStatusCode AddCompany(Company company)
+        public async Task<HttpStatusCode> AddCompanyAsync(Company company)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.PostAsJsonAsync(client.BaseAddress, company).Result;
+                SetClientAuthentication(client);
+                response = await  client.PostAsJsonAsync(
+                    _baseRequestUri, company);
             }
             return response.StatusCode;
         }
 
-        public HttpStatusCode UpdateCompany(Company company)
+        public async  Task<HttpStatusCode> UpdateCompanyAsync(Company company)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.PutAsJsonAsync(client.BaseAddress, company).Result;
+                SetClientAuthentication(client);
+                response = await client.PutAsJsonAsync(_baseRequestUri, 
+                    company);
             }
             return response.StatusCode;
         }
 
-        public HttpStatusCode DeleteCompany(int id)
+        public async  Task<HttpStatusCode> DeleteCompanyAsync(int id)
         {
             HttpResponseMessage response;
-            using (var client = CreateClient())
+            using (var client = new HttpClient())
             {
-                response = client.DeleteAsync(
-                    new Uri(client.BaseAddress, id.ToString(CultureInfo.InvariantCulture)))
-                    .Result;
+                SetClientAuthentication(client);
+                response = await client.DeleteAsync(
+                    new Uri(_baseRequestUri,id.ToString()));
+
             }
             return response.StatusCode;
         }

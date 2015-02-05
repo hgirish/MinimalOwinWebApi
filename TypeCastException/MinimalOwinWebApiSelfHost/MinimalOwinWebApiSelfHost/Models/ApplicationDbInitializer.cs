@@ -10,6 +10,7 @@ namespace MinimalOwinWebApiSelfHost.Models
             context.Companies.Add(new Company { Name = "Microsoft" });
             context.Companies.Add(new Company { Name = "Google" });
             context.Companies.Add(new Company { Name = "Apple" });
+            context.SaveChanges();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -8,6 +9,7 @@ using MinimalOwinWebApiSelfHost.Models;
 
 namespace MinimalOwinWebApiSelfHost.Controllers
 {
+    [Authorize(Roles = "Admin")]
     public class CompaniesController : ApiController
     {
         ApplicationDbContext _db = new ApplicationDbContext();
@@ -16,14 +18,20 @@ namespace MinimalOwinWebApiSelfHost.Controllers
 
         public IEnumerable<Company> Get()
         {
-            return _db.Companies;
+           // Console.WriteLine("Call to companies get");
+           
+            var companies = _db.Companies;
+            Console.WriteLine("number of companies :{0}", companies.Count());
+            return companies;
         }
 
         public async Task<Company> Get(int id)
         {
-            var company = await  _db.Companies.FirstOrDefaultAsync(c => c.Id == id);
+            Console.WriteLine("Get id{0}:", id);
+            var company = await _db.Companies.FirstOrDefaultAsync(c => c.Id == id);
             if (company == null)
             {
+                Console.WriteLine("Get company null");
                 throw new HttpResponseException(
                     System.Net.HttpStatusCode.NotFound);
             }
@@ -52,8 +60,10 @@ namespace MinimalOwinWebApiSelfHost.Controllers
         {
             if (company == null)
             {
+                Console.WriteLine("Company null put");
                 return BadRequest("Argument null");
             }
+            Console.WriteLine("Put company id: {0}", company.Id);
             var existing = await  _db.Companies.FirstOrDefaultAsync(c => c.Id == company.Id);
 
             if (existing == null)

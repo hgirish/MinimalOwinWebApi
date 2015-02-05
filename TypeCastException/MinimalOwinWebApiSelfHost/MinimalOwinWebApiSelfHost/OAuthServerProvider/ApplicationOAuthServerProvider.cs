@@ -27,6 +27,8 @@ namespace MinimalOwinWebApiSelfHost.OAuthServerProvider
                 new ClaimsIdentity(context.Options.AuthenticationType);
             identity.AddClaim(new Claim("user_name", context.UserName));
 
+            identity.AddClaim(new Claim(ClaimTypes.Role,"Admin"));
+
              context.Validated(identity);
            
         }

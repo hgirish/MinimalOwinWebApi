@@ -71,8 +71,57 @@ namespace MinimalSelfHostApiClient
             try
             {
                 tokenDictionary = await provider.GetTokenDictionary(
-                    "test@example.com", "assword");
+                    "test@example.com", "password");
                 accessToken = tokenDictionary["access_token"];
+
+                foreach (var kvp in tokenDictionary)
+                {
+                    Console.WriteLine("{0}: {1}", kvp.Key, kvp.Value);
+                    Console.WriteLine("");
+                }
+                var baseUri = new Uri(hostUriString);
+                var companyClient = new CompanyClient(baseUri, accessToken);
+
+                Console.WriteLine("Read all the companies...");
+                var reslut = await companyClient.GetCompaniesAsync();
+                var companies = reslut as Company[] ?? reslut.ToArray();
+                WriteCompanyList(companies);
+
+                int nextid = (from c in companies select c.Id).Max() + 1;
+                Console.WriteLine("Add a new company...");
+                var result = await companyClient.AddCompanyAsync(
+                    new Company
+                    {
+                        Name = string.Format("New Company #{0}", nextid)
+                    });
+                WriteStatusCodeResult(result);
+
+                Console.WriteLine("Updated list after Add:");
+                var list = await companyClient.GetCompaniesAsync();
+                companies = list.ToArray();
+                WriteCompanyList(companies);
+
+                Console.WriteLine("Update a company...");
+                var updateMe = await companyClient.GetCompanyAsync(nextid-1);
+                Console.WriteLine("UpdateMe.id{0}",updateMe.Id);
+                updateMe.Name = string.Format("Updated company #{0}", updateMe.Id);
+                result = await companyClient.UpdateCompanyAsync(updateMe);
+                WriteStatusCodeResult(result);
+
+                Console.WriteLine("Updated list after Update:");
+                 list = await companyClient.GetCompaniesAsync();
+                companies = list.ToArray();
+                WriteCompanyList(companies);
+
+                Console.WriteLine("Delete a comany...");
+                result = await companyClient.DeleteCompanyAsync(nextid = 1);
+                WriteStatusCodeResult(result);
+
+
+                Console.WriteLine("Updated list after Delete:");
+                list = await companyClient.GetCompaniesAsync();
+                companies = list.ToArray();
+                WriteCompanyList(companies);
             }
             catch (AggregateException ex)
             {
@@ -89,11 +138,7 @@ namespace MinimalSelfHostApiClient
                 Console.ReadLine();
                 return;
             }
-            foreach (var kvp in tokenDictionary)
-            {
-                Console.WriteLine("{0}: {1}", kvp.Key, kvp.Value);
-                Console.WriteLine("");
-            }
+            
         }
 
         private static void WriteCompanyList(IEnumerable<Company> companies)
