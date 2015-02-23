@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security.OAuth;
+using MinimalOwinWebApiSelfHost.Models;
 
 namespace MinimalOwinWebApiSelfHost.OAuthServerProvider
 {
@@ -16,18 +18,25 @@ namespace MinimalOwinWebApiSelfHost.OAuthServerProvider
 
         public override async Task GrantResourceOwnerCredentials(OAuthGrantResourceOwnerCredentialsContext context)
         {
-            if (context.Password != "password")
+            var manager = context.OwinContext.GetUserManager<ApplicationUserManager>();
+
+            var user = await manager.FindAsync(context.UserName, context.Password);
+
+           
+            if (user == null )
             {
-                context.SetError(
+                 context.SetError(
                     "Invalid_grant", "The user name or password is incorrect.");
                 context.Rejected();
                 return;
             }
+            
             var identity =
                 new ClaimsIdentity(context.Options.AuthenticationType);
-            identity.AddClaim(new Claim("user_name", context.UserName));
-
-            identity.AddClaim(new Claim(ClaimTypes.Role,"Admin"));
+            foreach (var userClaim in user.Claims)
+            {
+                identity.AddClaim(new Claim(userClaim.ClaimType,userClaim.ClaimValue));
+            }
 
              context.Validated(identity);
            

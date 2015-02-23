@@ -1,8 +1,9 @@
 ﻿using System.Data.Entity;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace MinimalOwinWebApiSelfHost.Models
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext() : base("MyDatabase")
         {
@@ -11,9 +12,15 @@ namespace MinimalOwinWebApiSelfHost.Models
 
         static ApplicationDbContext()
         {
-            System.Data.Entity.Database.SetInitializer(new ApplicationDbInitializer());
+            Database.SetInitializer(new ApplicationDbInitializer());
         }
 
-        public IDbSet<Company> Companies { get; set; } 
+        public static ApplicationDbContext Create()
+        {
+            return new ApplicationDbContext();
+        }
+
+        public IDbSet<Company> Companies { get; set; }
+       
     }
 }

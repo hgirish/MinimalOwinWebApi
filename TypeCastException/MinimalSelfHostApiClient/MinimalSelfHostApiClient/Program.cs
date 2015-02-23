@@ -71,7 +71,7 @@ namespace MinimalSelfHostApiClient
             try
             {
                 tokenDictionary = await provider.GetTokenDictionary(
-                    "test@example.com", "password");
+                    "john@example.com", "JohnsPassword");
                 accessToken = tokenDictionary["access_token"];
 
                 foreach (var kvp in tokenDictionary)
